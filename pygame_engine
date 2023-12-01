@@ -1,0 +1,243 @@
+import pygame
+
+pygame.init()
+
+def get_font(size, color, name=None):
+   return pygame.font.SysFont(name, size, color)
+def get_sys_fonts():
+   return pygame.font.get_fonts()
+def render_text(text, font, color):
+   text_surface = font.render(text, True, color)
+   return text_surface, text_surface.get_rect()
+
+def init():
+   # Set up the drawing window
+   screen = pygame.display.set_mode((640, 480))
+   pygame.display.set_caption("Pygame Engine")
+   # Set up the colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+
+def rotate(image, rect, angle):
+    """Rotate the image while keeping its center."""
+    # Rotate the original image without modifying it.
+    new_image = pygame.transform.rotate(image, angle)
+    # Get a new rect with the center of the old rect.
+    _rect = new_image.get_rect()
+    _rect.center = rect.center
+    return new_image, _rect
+def rot_center(image, angle):
+    """rotate a Surface, maintaining position."""
+
+    loc = image.get_rect().center  #rot_image is not defined 
+    rot_sprite = pygame.transform.rotate(image, angle)
+    rot_sprite.get_rect().center = loc
+    return rot_sprite
+class Mouse:
+   def __init__(self):
+      self.x = pygame.mouse.get_pos()[0]
+      self.y = pygame.mouse.get_pos()[1]
+      self.rect = pygame.Rect(self.x, self.y, 1, 1)
+   def get_x(self):
+      self.x = pygame.mouse.get_pos()[0]
+      self.rect = pygame.Rect(self.x, self.y, 1, 1)
+      return self.x
+   def get_y(self):
+      self.y = pygame.mouse.get_pos()[1]
+      self.rect = pygame.Rect(self.x, self.y, 1, 1)
+      return self.y
+   def get_pos(self):
+      self.x = pygame.mouse.get_pos()[0]
+      self.y = pygame.mouse.get_pos()[1]
+      self.rect = pygame.Rect(self.x, self.y, 1, 1)
+      return self.x, self.y
+   def isClicked(self):
+      return pygame.mouse.get_pressed()[0]
+   def isPressed(self):
+      return pygame.mouse.get_pressed()[1]
+   def isReleased(self):
+      return pygame.mouse.get_pressed()[2]
+   def lock(self):
+      pygame.mouse.set_pos(self.x, self.y)
+   def set_pos(self, x, y):
+      self.x = x
+      self.y = y
+      self.rect = pygame.Rect(self.x, self.y, 1, 1)
+      pygame.mouse.set_pos(self.x, self.y)
+   def set_x(self, x):
+      self.x = x
+      self.rect = pygame.Rect(self.x, self.y, 1, 1)
+      pygame.mouse.set_pos(self.x, self.y)
+   def set_y(self, y):
+      self.y = y
+      self.rect = pygame.Rect(self.x, self.y, 1, 1)
+      pygame.mouse.set_pos(self.x, self.y)      
+class Camera:
+   def __init__(self) -> None:
+      self.x = 0
+      self.y = 0
+      self.target_x = 0
+      self.target_y = 0
+      self.width = 640
+      self.height = 480
+      self.move_speed = 1
+      self.move_speed_max = 5
+      self.move_speed_min = 1
+      self.zoom = 1
+      self.zoom_speed = 1
+      self.zoom_speed_max = 5
+      self.zoom_speed_min = -5
+   def look_at(self, target=None, x=None, y=None):
+      if target != None:
+         self.target_x = target.x
+         self.target_y = target.y
+      if x != None or y != None:
+         if x == None:
+            x = 0
+         if y == None:
+            y = 0
+         self.target_x = x
+         self.target_y = y
+   def update(self):
+      if self.target_x != self.x:
+         self.x += ((self.target_x - self.x) / self.move_speed_max) * self.move_speed
+         self.move_speed *= 2 / self.move_speed
+         if self.move_speed > self.move_speed_max:
+            self.move_speed = self.move_speed_max
+      if self.target_y != self.y:
+         self.y += ((self.target_y - self.y) / self.move_speed_max) * self.move_speed
+         self.move_speed *= 2 / self.move_speed
+         if self.move_speed > self.move_speed_max:
+            self.move_speed = self.move_speed_max
+      if self.target_x == self.x and self.target_y == self.y:
+         self.move_speed /= 2 / self.move_speed
+camera = Camera()
+mouse = Mouse()
+class Engine:
+   def __init__(self, size, title="GAME", fps=30, icon=None):
+      self.show_fps = True
+      self.show_axis = True
+      self.title = title
+      self.size = size
+      self.fps = fps
+      self.screen = pygame.display.set_mode(self.size)
+      pygame.display.set_caption(self.title)
+      self.clock = pygame.time.Clock()
+      self.icon = icon
+      self.color = (77, 77, 77)
+      self.color_x_axis = (203, 57, 80)
+      self.color_y_axis = (121, 180, 21)
+      if self.icon != None:
+         pygame.display.set_icon(self.icon)
+      self.running = True
+   def update(self):
+      global camera
+      for event in pygame.event.get():
+         if event.type == pygame.QUIT:
+            game.running = False
+      if self.icon != None:
+         pygame.display.set_icon(self.icon)
+      self.clock.tick(self.fps)
+      pygame.display.update()
+      self.screen.fill(self.color)
+      if self.show_axis:
+         pygame.draw.line(self.screen, self.color_x_axis, (self.size[0]/2 + camera.x, 0), (self.size[0]/2 + camera.x, self.size[1]), 2)
+         pygame.draw.line(self.screen, self.color_y_axis, (0, self.size[1]/2 + camera.y), (self.size[0], self.size[1]/2+ camera.y), 2)
+      if self.show_fps:
+         fps_text = get_font(25, WHITE, name='dejavusans').render(str(int(self.clock.get_fps())), True, WHITE)
+         self.screen.blit(fps_text, (20, 20))
+class image:
+   def __init__(self, path, screen=None):
+      self.path = path
+      self.image = pygame.image.load(self.path)
+      self.screen = screen
+      self.surface = self.image
+      self.rect = self.image.get_rect()
+      self.x = 0
+      self.y = 0
+   def resize(self, size):
+      self.image = pygame.transform.scale(self.image, size)
+      self.surface = self.image
+   def rotate(self, degrees):
+      self.image, self.rect = rotate(self.image, self.rect, degrees)
+      self.surface = self.image
+      # self.image = rot_center(self.image, degrees)
+   def surface():
+      return self.image
+   def draw(self, pos=None):
+      global camera
+      self.rect.x = self.x + camera.x
+      self.rect.y = self.y + camera.y
+      if pos == None:
+         self.screen.blit(self.image, self.rect)
+      else:
+         self.screen.blit(self.image, pos)
+   def blit(self, pos=None):
+      if pos == None:
+         self.screen.blit(self.image, self.rect)
+      else:
+         self.screen.blit(self.image, pos)      
+class sprite:
+   def __init__(self, image, pos, size=None):
+      self.image = image
+      self.pos = pos
+      self.size = size
+   def draw(self):
+      self.image.draw(self.pos)
+      if self.size != None:
+         self.image.resize(self.size)
+      
+class css:
+   def __init__(self):
+      self.background = None
+      self.font = None
+      self.color = None
+      self.size = None
+      self.border = None
+      self.border_color = None
+      self.border_radius = None
+      self.border_width = None
+      self.border_style = None
+      self.padding = None
+      self.margin = None
+      self.display = None
+      self.position = None
+      self.width = None
+      self.height = None
+      self.left = None
+      self.top = None
+      self.right = None
+      self.bottom = None
+      self.z_index = None
+      self.opacity = None
+      self.overflow = None
+      self.float = None
+      self.clear = None
+      self.clip = None
+      self.text_align = None
+      self.text_decoration = None
+      self.text_transform = None
+      self.text_indent = None
+      self.line_height = None
+      self.word_spacing = None
+      self.letter_spacing = None
+      self.font_family = None
+      self.font_style = None
+      self.font_weight = None
+      self.font_variant = None
+      self.font_size = None
+      self.font_size_adjust = None   
+class text(css):
+   def __init__(self):
+      super().__init__()
+      self.text = None
+      self.font_size = 16
+      self.color = WHITE
+      self.screen = None
+      self.font = get_font(self.font_size, self.color)
+   def draw(self, pos=(0, 0)) -> None:
+      if self.background != None:
+         pygame.draw.rect(self.screen, self.background, (self.pos[0], self.pos[1], self.width + self.padding * 2, self.height + self.padding * 2))
